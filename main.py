@@ -58,7 +58,7 @@ while True:
                 
                 # Wrist
                 if index == 0:
-                    cv2.circle(frame, (x, y), radius=7, color=get_color_by_name("Pastel Orange"), thickness=-1)
+                    cv2.circle(frame, (x, y), radius=7, color=get_color_by_name("Pastel Magenta"), thickness=-1)
 
                 # Thumb
                 elif index < 5:  
