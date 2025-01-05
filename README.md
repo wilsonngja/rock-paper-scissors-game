@@ -24,14 +24,31 @@ pip install -r requirements.txt
 ```
 
 
-To test if the application is running successfully, execute the `main.py` using:
+## Usage
+Run the application using the following command:
+
 ```
 python main.py
 ```
 
-## Usage
+To initiate the game, press the spacebar button. A countdown will commence, followed by a prompt to display your hand to the camera for a hand signal detection.
+
+Upon presenting your hand, the game will determine the outcome of the match. A text display will indicate the winner or loser, which will remain visible for two seconds while the score is recorded. This ensures that any changes to hand signals after the result is displayed do not alter the recorded outcome. For instance, if you select rock and the game indicates a loss, it means the computer chose paper. In this scenario, the score will be updated accordingly. However, if you subsequently select scissors, despite the screen displaying a win, the previous result remains recorded, and the new score will not be updated.
+
+To quit the game, press the "q" button.
+
 
 ## Features
 
-## Technologies Used
+Apart from the ability to detect hand signal, the application also performs score tracking until the game is terminated. This can be seen from the video as shown:
 
+![Score Tracking](./img/save-score.gif)
+
+
+## Technologies Used
+The Tech Stack used are as follows:
+- Python 3.10
+- Ultralytics
+- YOLOv11
+- OpenCV-Python
+- Google Colab (For Training the model)
