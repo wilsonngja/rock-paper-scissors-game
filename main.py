@@ -5,25 +5,25 @@ import time
 
 # List of colors with their RGB values
 colors = [
-    {"name": "Pastel Red", "rgb": (255, 179, 186)},
-    {"name": "Pastel Green", "rgb": (186, 255, 201)},
-    {"name": "Pastel Blue", "rgb": (179, 229, 255)},
-    {"name": "Pastel Yellow", "rgb": (255, 253, 178)},
-    {"name": "Pastel Cyan", "rgb": (178, 255, 255)},
-    {"name": "Pastel Magenta", "rgb": (255, 178, 255)},
-    {"name": "Bright White", "rgb": (255, 255, 255)},
-    {"name": "Pastel Gray", "rgb": (211, 211, 211)},
-    {"name": "Pastel Orange", "rgb": (255, 204, 153)},
-    {"name": "Pastel Purple", "rgb": (204, 153, 255)},
-    {"name": "Pastel Pink", "rgb": (255, 204, 229)},
-    {"name": "Pastel Brown", "rgb": (222, 184, 135)},
-    {"name": "Pastel Lime", "rgb": (204, 255, 153)},
-    {"name": "Pastel Teal", "rgb": (153, 255, 204)},
-    {"name": "Pastel Navy", "rgb": (153, 204, 255)},
-    {"name": "Pastel Gold", "rgb": (255, 223, 186)},
-    {"name": "Pastel Salmon", "rgb": (255, 182, 193)},
-    {"name": "Pastel Beige", "rgb": (255, 245, 204)},
-    {"name": "Pastel Olive", "rgb": (204, 255, 178)}
+    {"name": "Pastel Red", "bgr": (186, 179, 255)},
+    {"name": "Pastel Green", "bgr": (201, 255, 186)},
+    {"name": "Pastel Blue", "bgr": (242, 235, 179)},
+    {"name": "Pastel Yellow", "bgr": (140, 238, 255)},
+    {"name": "Pastel Cyan", "bgr": (216, 216, 164)},
+    {"name": "Pastel Magenta", "bgr": (194, 154, 244)},
+    {"name": "Bright White", "bgr": (255, 255, 255)},
+    {"name": "Pastel Gray", "bgr": (211, 211, 211)},
+    {"name": "Pastel Orange", "bgr": (103, 192, 255)},
+    {"name": "Pastel Purple", "bgr": (217, 156, 177)},
+    {"name": "Pastel Pink", "bgr": (220, 209, 255)},
+    {"name": "Pastel Brown", "bgr": (83, 105, 131)},
+    {"name": "Pastel Lime", "bgr": (143, 236, 216)},
+    {"name": "Pastel Teal", "bgr": (183, 183, 99)},
+    {"name": "Pastel Navy", "bgr": (107, 66, 61)},
+    {"name": "Pastel Gold", "bgr": (124, 210, 231)},
+    {"name": "Pastel Salmon", "bgr": (178, 193, 246)},
+    {"name": "Pastel Beige", "bgr": (200, 236, 254)},
+    {"name": "Pastel Olive", "bgr": (130, 188, 188)}
 ]
 
 played = False
@@ -36,11 +36,30 @@ countdown_value = None
 game_paused_start_time = None
 game_paused_value = None
 
+ROCK = "ROCK"
+SCISSORS = "SCISSORS"
+PAPER = "PAPER"
+START_GAME_TEXT = "Press '<space>' to start."
+QUIT_GAME_TEXT = "Press 'q' to quit."
+WIN = "YOU WIN"
+LOSE = "YOU LOSE"
+DRAW = "DRAW"
+
+player_score = 0
+computer_score = 0
+
 def get_color_by_name(name):
     for color in colors:
         if color["name"].lower() == name.lower():
-            return color["rgb"]
+            return color["bgr"]
     return (255, 255, 255)  # Default to white if not found
+
+def draw_text(text, scale, thickness, colour):
+    text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_DUPLEX, scale, thickness)[0]
+    text_width, text_height = text_size
+    text_x = (frame_width - text_width) // 2
+    text_y = (frame_height + text_height) // 2
+    cv2.putText(frame, text, (text_x, text_y), cv2.FONT_HERSHEY_DUPLEX, scale, colour, thickness)
 
 # Load a model
 model = YOLO("./model/best.pt")  # load a pretrained model (recommended for training)
@@ -55,6 +74,13 @@ while True:
         break
 
     results = model(frame, show=False)
+
+    frame_height, frame_width, _ = frame.shape
+    cv2.putText(frame, "YOUR SCORE", (30, 50), cv2.FONT_HERSHEY_TRIPLEX, 1, get_color_by_name("Pastel Green"), 2)
+    cv2.putText(frame, str(player_score), (120, 100), cv2.FONT_HERSHEY_TRIPLEX, 1, get_color_by_name("Pastel Green"), 2)
+    cv2.putText(frame, "COMPUTER SCORE", (frame_width - 330, 50), cv2.FONT_HERSHEY_TRIPLEX, 1, get_color_by_name("Pastel Red"), 2)
+    cv2.putText(frame, str(computer_score), (frame_width - 190, 100), cv2.FONT_HERSHEY_TRIPLEX, 1, get_color_by_name("Pastel Red"), 2)
+
 
     # Countdown logic
     if countdown_start_time is not None:
@@ -71,19 +97,23 @@ while True:
         frame_height, frame_width, _ = frame.shape
         if countdown_value is not None:
             # Display the countdown
-            text_size = cv2.getTextSize(str(countdown_value), cv2.FONT_HERSHEY_DUPLEX, 5, 10)[0]
-            text_width, text_height = text_size
-            text_x = (frame_width - text_width) // 2
-            text_y = (frame_height + text_height) // 2
-            cv2.putText(frame, str(countdown_value), (text_x, text_y), cv2.FONT_HERSHEY_DUPLEX, 5, (0, 255, 255), 10)
+            draw_text(str(countdown_value), 5, 10, get_color_by_name("Pastel Gold"))
+            
         else:
             # Display initial message
-            text_size = cv2.getTextSize("Press <space> to start...", cv2.FONT_HERSHEY_DUPLEX, 2, 7)[0]
+            text_size = cv2.getTextSize(QUIT_GAME_TEXT, cv2.FONT_HERSHEY_DUPLEX, 2, 7)[0]
             text_width, text_height = text_size
             text_x = (frame_width - text_width) // 2
             text_y = (frame_height + text_height) // 2
-            cv2.putText(frame, "Press <space> to start...", (text_x, text_y), cv2.FONT_HERSHEY_DUPLEX, 2, get_color_by_name("Pastel GREEN"), 7)    
+            cv2.putText(frame, QUIT_GAME_TEXT, (text_x, text_y - 50), cv2.FONT_HERSHEY_DUPLEX, 2, get_color_by_name("Pastel Pink"), 5)
 
+            text_size = cv2.getTextSize(START_GAME_TEXT, cv2.FONT_HERSHEY_DUPLEX, 2, 5)[0]
+            text_width, text_height = text_size
+            text_x = (frame_width - text_width) // 2
+            text_y = (frame_height + text_height) // 2
+            cv2.putText(frame, START_GAME_TEXT, (text_x, text_y + 50), cv2.FONT_HERSHEY_DUPLEX, 2, get_color_by_name("Pastel Blue"), 5)
+            
+            
     else:
         boxes = results[0].boxes
 
@@ -98,13 +128,11 @@ while True:
             if game_paused_value == 0:
                 gameStarted = False
                 game_paused_start_time = None  # Reset countdown
-                # gamePaused = False
-                # game_paused_value = None
+
 
         # Check if there are keypoints detected
         if results[0].keypoints is not None and results[0].keypoints.data.numel() > 0:
             # Iterate through all detections (hands)
-            print("BOXES: " + str(coordinates_list), coordinates_list[0][0], coordinates_list[0][1], coordinates_list[0][2])
             for detection_index, keypoints in enumerate(results[0].keypoints.xy):  # Loop through each hand's keypoints
                 
                 for index, keypoint in enumerate(keypoints):
@@ -112,11 +140,11 @@ while True:
                     
                     # Wrist
                     if index == 0:
-                        cv2.circle(frame, (x, y), radius=7, color=get_color_by_name("Pastel Magenta"), thickness=-1)
+                        cv2.circle(frame, (x, y), radius=7, color=get_color_by_name("Pastel Beige"), thickness=-1)
 
                     # Thumb
                     elif index < 5:  
-                        cv2.circle(frame, (x, y), radius=7, color=get_color_by_name("Pastel Cyan"), thickness=-1)
+                        cv2.circle(frame, (x, y), radius=7, color=get_color_by_name("Pastel Lime"), thickness=-1)
                 
                     # Index
                     if index < 9:
@@ -132,7 +160,7 @@ while True:
 
                     # Pinky
                     else:
-                        cv2.circle(frame, (x, y), radius=7, color=get_color_by_name("Pastel Navy"), thickness=-1)
+                        cv2.circle(frame, (x, y), radius=7, color=get_color_by_name("Pastel Salmon"), thickness=-1)
                 
                 # To detect Paper
                 thumbs_is_straight = keypoints[1][0] > keypoints[2][0] > keypoints[3][0] > keypoints[4][0] or keypoints[1][0] < keypoints[2][0] < keypoints[3][0] < keypoints[4][0]
@@ -149,34 +177,27 @@ while True:
 
                 # To detect Scissors
                 thumb_above_wrist = keypoints[0][1] > keypoints[4][1] and abs(keypoints[0][0] - keypoints[4][0]) < 100
-
         
                 frame_height, frame_width, _ = frame.shape
                 # Calculate text size and position
                 text_size = cv2.getTextSize("DETECTED", cv2.FONT_HERSHEY_SIMPLEX, 1, 5)[0]
                 text_x = int((coordinates_list[0][0] + coordinates_list[0][2]) // 2)
                 text_y = int(coordinates_list[0][1] - 10)
-                # text_x = (frame_width - text_size[0]) // 2  # Center horizontally
-                # text_y = 20 + text_size[1]  # Slightly offset from the top
-
+                
                 user_choice = ""
                 if (thumbs_is_straight and index_is_straight and middle_is_straight and ring_is_straight and pinky_is_straight):
                     user_choice = "PAPER"
-                    print("PAPER")
-                    cv2.putText(frame, "PAPER", (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 1.5, get_color_by_name("Pastel Red"), 5)
+                    cv2.putText(frame, "PAPER", (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 1.5, get_color_by_name("Pastel Cyan"), 5)
 
                 elif (index_is_curled and middle_is_curled and ring_is_curled and pinky_is_curled):
                     user_choice = "ROCK"
-                    print("ROCK")
-                    cv2.putText(frame, "ROCK", (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 1.5, get_color_by_name("Pastel Red"), 5)
+                    cv2.putText(frame, "ROCK", (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 1.5, get_color_by_name("Pastel Cyan"), 5)
                     
                 elif (thumb_above_wrist):
                     user_choice = "SCISSORS"
-                    print("SCISSORS")
-                    cv2.putText(frame, "SCISSORS", (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 1.5, get_color_by_name("Pastel Red"), 5)
+                    cv2.putText(frame, "SCISSORS", (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 1.5, get_color_by_name("Pastel Cyan"), 5)
                 else:
                     user_choice = "ERROR" 
-                    print("Can't detect")
                     cv2.putText(frame, "CAN'T DETECT", (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 1.5, get_color_by_name("Pastel Red"), 5)
 
                 
@@ -190,40 +211,33 @@ while True:
                         computer_string = "ROCK" if random_int == 0 else "PAPER" if random_int == 1 else "SCISSORS"
 
                         win_condition = (user_choice == "ROCK" and computer_string == "SCISSORS") or (user_choice == "SCISSORS" and computer_string == "PAPER") or (user_choice == "PAPER" and computer_string== "ROCK")
-                        
+                        if (user_choice == computer_string):
+                            draw_text(DRAW, 8, 15, get_color_by_name("Pastel Yellow"))
+
+                        elif (win_condition):
+                            draw_text(WIN, 8, 15, get_color_by_name("Pastel Green"))
+                            player_score += 1
+
+                        else:
+                            draw_text(LOSE, 8, 15, get_color_by_name("Pastel Red"))
+                            computer_score += 1
+
                         played = True
                         
                     elif not gamePaused:
                         game_paused_start_time = time.time()
                         gamePaused = True
-                        
-                    
-                    frame_height, frame_width, _ = frame.shape
-                    # Calculate text size and position
-                    
-
+                              
                     if (user_choice == computer_string):
-                        text_size = cv2.getTextSize("DRAW", cv2.FONT_HERSHEY_DUPLEX, 8, 15)[0]
-                        text_width, text_height = text_size
-                        text_x = (frame_width - text_width) // 2  # Center horizontally
-                        text_y = (frame_height + text_height) // 2  # Center vertically (y considers text height)
-                        cv2.putText(frame, "DRAW", (text_x, text_y), cv2.FONT_HERSHEY_DUPLEX, 8, get_color_by_name("Pastel YELLOW"), 15)
-                    elif (win_condition):
-                        text_size = cv2.getTextSize("YOU WIN", cv2.FONT_HERSHEY_DUPLEX, 8, 15)[0]
-                        text_width, text_height = text_size
-                        text_x = (frame_width - text_width) // 2  # Center horizontally
-                        text_y = (frame_height + text_height) // 2  # Center vertically (y considers text height)
-                        cv2.putText(frame, "YOU WIN", (text_x, text_y), cv2.FONT_HERSHEY_DUPLEX, 8, get_color_by_name("Pastel GREEN"), 15)
-                    else:
-                        text_size = cv2.getTextSize("YOU LOSE", cv2.FONT_HERSHEY_DUPLEX, 8, 15)[0]
-                        text_width, text_height = text_size
-                        text_x = (frame_width - text_width) // 2  # Center horizontally
-                        text_y = (frame_height + text_height) // 2  # Center vertically (y considers text height)
-                        cv2.putText(frame, "YOU LOSE", (text_x, text_y), cv2.FONT_HERSHEY_DUPLEX, 8, get_color_by_name("Pastel Red"), 15)
-                    # gameStarted = False
-    
+                        draw_text(DRAW, 8, 15, get_color_by_name("Pastel Yellow"))
 
-    
+                    elif (win_condition):
+                        draw_text(WIN, 8, 15, get_color_by_name("Pastel Green"))
+
+                    else:
+                        draw_text(LOSE, 8, 15, get_color_by_name("Pastel Red"))
+
+   
     # Display the annotated frame
     cv2.imshow("YOLOv11 Real-Time Prediction", frame)
     key = cv2.waitKey(1) & 0xFF
